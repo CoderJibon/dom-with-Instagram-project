@@ -5,13 +5,18 @@ instagram_form.onsubmit = (e) => {
     e.preventDefault();
 
     const createForm = new FormData(e.target);
-    const CreateFormData = Object.fromEntries(createForm.entries());
     const { postImage, postcontent, user_name, user_photo } = Object.fromEntries(createForm.entries());
     
     if (!user_name || !user_photo ) {
         msgCreate.innerHTML = alertSms('You must Field User Name and User Photo!')
     } else {
-        addLsData('instagram_data', CreateFormData);
+        //random id generator
+        const get_date = new Date();
+        const RandomID = Math.round(Math.random() + 1000 + get_date.getTime());
+
+        const StoreForm = { user_name, user_photo, postImage, postcontent, id: RandomID };
+        //add new fomr data
+        addLsData('instagram_data', StoreForm);
         displayData();
         msgCreate.innerHTML = alertSms('Success!', 'success ');
         e.target.reset()
@@ -26,15 +31,15 @@ const displayData = () => {
 
     const allData = readLsData('instagram_data');
 
-    let displayList = '';
-
+    let displayList = [];
     if (!allData || allData.length <= 0) {
         displayList = ` <li class="my-2  list-group-item px-0 text-center">
                             <p>Post Not Found</p>
                         </li>`;
     } else {
         
-    allData.map((items,index) => {
+        allData.reverse().map((items, index) => {
+       
         displayList += `<li class="my-2  list-group-item px-0">
                                     <div class="d-flex justify-content-between align-items-center ">
                                       <div class="d-flex align-items-center justify-content-start ps-3 ">
@@ -49,8 +54,8 @@ const displayData = () => {
                                       <button class="btn btn-secondary dropdown-toggle btn-group dropstart" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                       <i class="fa-solid fa-ellipsis"></i>
                                       </button>
-                                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">                    <li><a post_edit="${index}" class="dropdown-item edit" serial="0" href="#" data-bs-target="#edit_form" data-bs-toggle="modal">Edit</a></li>
-                                          <li><a post_delate="${index}" class="dropdown-item delete" serial="0" href="#">Delete</a></li>
+                                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">                    <li><a post_edit="${items.id}" class="dropdown-item edit" serial="0" href="#" data-bs-target="#edit_form" data-bs-toggle="modal">Edit</a></li>
+                                          <li><a post_delate="${items.id}" class="dropdown-item delete" serial="0" href="#">Delete</a></li>
                                       </ul>
                                       </div>
                                   </div>
@@ -104,14 +109,17 @@ output.onclick = (e) => {
 
         // read ls data
         const allPost = readLsData('instagram_data');
-
-        //single edit data
-        const singleEditData = allPost[editIndex];
         
+        //single edit data  
+        const singleEditData = allPost.find((id) => {
+            return id.id == editIndex;
+        });
+
+       
         //edit data
         instagram_Update.innerHTML = `<label for="user_name">User name</label>
                       <input type="text" class="form-control border border-info bg-light my-3 " value="${singleEditData?.user_name}" name="user_name" id="user_name">
-                      <input type="hidden" class="form-control border border-info bg-light my-3 " value="${editIndex}" name="index" id="user_name">
+                      <input type="hidden" class="form-control border border-info bg-light my-3 " value="${singleEditData?.id}" name="id" id="user_name">
                       <label for="user_photo">User photo</label>
                       <input type="text" class="form-control border border-info bg-light my-3 " value="${singleEditData?.user_photo}" name="user_photo" id="user_photo">
                       <label for="">post Image</label>
@@ -119,9 +127,7 @@ output.onclick = (e) => {
                       <label for="">post Image</label>
                       <textarea name="postcontent" id="" cols="30" rows="10">${singleEditData?.postcontent}</textarea>
                       <button type="submit" class="btn btn-secondary text-white w-100 my-3">save post</button>`;
-
-         
-    }
+         }
 
     //Delate Post
      const postDelate = e.target.hasAttribute('post_delate');
@@ -131,7 +137,12 @@ output.onclick = (e) => {
 
         // read ls data
         let POstAll = readLsData('instagram_data');
-        POstAll.splice(delateIndex, 1)
+
+        //find index
+        let objIndex = POstAll.findIndex(item => item.id == delateIndex);
+        
+        //single edit data  
+        POstAll.splice(objIndex, 1);
         
         //update all post data
         updateLsData('instagram_data', POstAll);
@@ -147,14 +158,20 @@ instagram_Update.onsubmit = (e) => {
     //edit form data
     const editForm = new FormData(e.target);
     const EditData = Object.fromEntries(editForm.entries());
-    const { user_name, user_photo, postcontent, postImage, index } = Object.fromEntries(editForm.entries());
+    const { user_name, user_photo, postcontent, postImage, id } = Object.fromEntries(editForm.entries());
+
+  
 
     if (!user_name || !user_photo) {
         msgEidt.innerHTML = alertSms('You must Field User Name and User Photo!')
     } else {
          // read ls data
         let AllData = readLsData('instagram_data');
-        AllData[index] = { user_name, user_photo, postcontent, postImage };
+       
+        //find index
+         let objIndex = AllData.findIndex(item => item.id == id);
+
+        AllData[objIndex] = { user_name, user_photo, postcontent, postImage, id };
 
         //update all post data
         updateLsData('instagram_data', AllData);
